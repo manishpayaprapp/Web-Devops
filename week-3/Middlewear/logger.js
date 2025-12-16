@@ -5,6 +5,7 @@ let requestCount = 0;
 
 function infoPrinter(req,res,next){
 console.log("The URL is :"+req.path);
+console.log("The Host is :"+req.hostname);
 console.log("The Method is :"+req.method);
 console.log(new Date());
 next();
