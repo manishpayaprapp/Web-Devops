@@ -1,0 +1,62 @@
+<html>
+<head>
+<title>Authorization</title>
+</head>
+<script src ="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.6/axios.min.js"></script> 
+<script>
+    async function signup(){
+        const username =document.getElementById("signup-username").value;
+        const password =document.getElementById("sigup-password").value;
+       await axios.post("http://localhost:3000/signup",{
+            username:username,
+            password:password
+        });
+        alert("You are Signed up")
+    };
+    async function signin(){
+        const username =document.getElementById("signin-username").value;
+        const password =document.getElementById("signin-password").value;
+       const response =await axios.post("http://localhost:3000/signin",{
+            username:username,
+            password:password
+        });
+        localStorage.setItem("token",response.data.token);
+        alert("You are Signed in")
+    };
+    async function gitinfo(){
+        const token = localStorage.getItem("token");
+        if (token){
+            const response = await axios.get("http://localhost:3000/me",{
+                headers :{
+                    Authorization: token
+                }
+            })
+            document.getElementById("information").innerHTML ="username:   "+response.data.username;        }
+    }
+    gitinfo();
+    function logout(){
+        localStorage.removeItem("token");
+    }
+</script>
+<body>
+    <div style="margin-bottom: 20px ;">
+        Signup
+    <input id="signup-username"type="text" placeholder="username"></input>
+    <input id="sigup-password"type="password" placeholder="password"></input>
+    <button onclick="signup()">Signup</button>
+    </div>
+    <div style="margin-bottom: 20px ;">
+        Signin
+    <input id="signin-username"type="text" placeholder="username"></input>
+    <input id="signin-password"type="password" placeholder="password"></input>
+    <button onclick="signin()">Signin</button>
+    </div>
+    <div style="margin-bottom: 20px ;">
+    User Information :
+    <span id="information"></span>
+    </div>
+    <div>
+    <button onclick="logout()">Logout</button>
+    </div>
+</body>
+</html>
