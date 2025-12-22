@@ -11,3 +11,4 @@ function auth(req, res, next) {
     });
   }
 }
+module.export={auth};
