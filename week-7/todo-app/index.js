@@ -1,8 +1,10 @@
+const bcrypt = require("bcrypt");
 const express = require("express");
 const app = express();
 const jwt = require("jsonwebtoken");
 const JWT_SECRECT = "Key123";
 const mongoose = require("mongoose");
+const {z}=require("zod");
 
 mongoose.connect(
   "mongodb+srv://manishpayaprapp02_db_user:50DoElmPElDeFCHc@cluster0.sz9hwut.mongodb.net/todo-Manish"
@@ -17,28 +19,47 @@ app.post("/signup", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const name = req.body.name;
-
-  await UserModel.create({
+  const requireBody = z.object({
+    email:z.string().min(3).max(50).email(),
+    password:z.string().min(3).max(50),
+    name:z.string().min(3).max(50)
+  })
+  const parsedDataWithSuccess =requireBody.safeParse(req.body);
+  if(!parsedDataWithSuccess.success){
+    res.json({
+      msg:"Incorrect Format",
+      error:parsedDataWithSuccess.error
+    })
+    return
+  }
+  const hashedPassword =await bcrypt.hash(password,5);
+  try{
+    await UserModel.create({
     email: email,
-    password: password,
+    password: hashedPassword,
     name: name
   });
-
-  res.json({
+  }
+  catch(e){
+    throw new Error("Muitple tabs are Not Allowed !!")
+  }
+    res.json({
     msg: "you are signed up"
   });
+  
 });
 
 app.post("/signin", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
+
   const user = await UserModel.findOne({
     email: email,
-    password: password
   });
+  const passwordMatch = bcrypt.compare(password,user.password);
 
-  if (user) {
+  if (passwordMatch) {
     const token = jwt.sign(
       { id: user._id.toString() },
       JWT_SECRECT
@@ -47,7 +68,7 @@ app.post("/signin", async (req, res) => {
     res.json({ token });
   } else {
     res.status(403).json({
-      msg: "Wrong Credentials"
+    msg: "Wrong Credentials"
     });
   }
 });
