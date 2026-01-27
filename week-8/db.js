@@ -1,5 +1,5 @@
 const mongoose=require("mongoose");
-mongoose.connect("mongodb+srv://manishpayaprapp02_db_user:50DoElmPElDeFCHc@cluster0.sz9hwut.mongodb.net/Course-Selling")
+mongoose.connect("mongodb+srv://manishpayaprapp01_db_user:pizt1UqjeQvbreDV@cluster0.gamiiqo.mongodb.net/")
 const Schema =mongoose.Schema;
 const ObjectId =mongoose.Types.ObjectId;
 const userSchema =new Schema({
