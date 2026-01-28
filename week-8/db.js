@@ -1,37 +1,48 @@
-const mongoose=require("mongoose");
-mongoose.connect("mongodb+srv://manishpayaprapp01_db_user:pizt1UqjeQvbreDV@cluster0.gamiiqo.mongodb.net/")
-const Schema =mongoose.Schema;
-const ObjectId =mongoose.Types.ObjectId;
-const userSchema =new Schema({
-emial:{type:String,unique:true},
-password:String,
-fisrtName:String,
-lastName:String
+const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
+const ObjectId = mongoose.Types.ObjectId;
+
+// USER SCHEMA
+const userSchema = new Schema({
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  firstName: String,
+  lastName: String
 });
-const courseSchema =new Schema({
-title:String,
-discription:String,
-price:Number,
-img_URL:String,
-creatorId :ObjectId
+
+// COURSE SCHEMA
+const courseSchema = new Schema({
+  title: String,
+  description: String,
+  price: Number,
+  img_URL: String,
+  creatorId: ObjectId
 });
-const adminSchema =new Schema({
-emial:{type:String,unique:true},
-password:String,
-fisrtName:String,
-lastName:String
+
+// ADMIN SCHEMA
+const adminSchema = new Schema({
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  firstName: String,
+  lastName: String
 });
-const purchaseSchema =new Schema({
-userId:ObjectId,
-courseId:ObjectId
+
+// PURCHASE SCHEMA
+const purchaseSchema = new Schema({
+  userId: ObjectId,
+  courseId: ObjectId
 });
-const userModel =mongoose.model("user",userSchema);
-const courseModel =mongoose.model("course",courseSchema);
-const adminModel =mongoose.model("admin",adminSchema);
-const purchaseModel =mongoose.model("purchase",purchaseSchema);
-module.exports={
-    userModel:userModel,
-    courseModel:courseModel,
-    adminModel:adminModel,
-    purchaseModel:purchaseModel
+
+// MODELS
+const userModel = mongoose.model("user", userSchema);
+const courseModel = mongoose.model("course", courseSchema);
+const adminModel = mongoose.model("admin", adminSchema);
+const purchaseModel = mongoose.model("purchase", purchaseSchema);
+
+module.exports = {
+  userModel,
+  courseModel,
+  adminModel,
+  purchaseModel
 };
