@@ -2,6 +2,7 @@ const {Router}=require("express");
 const userRouter =Router();
 const {z}= require("zod");
 const jwt =require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const JWT_KEY_USER ="123";
 const {userModel}=require("../db");
 userRouter.post("/signup",async(req,res)=>{
@@ -26,29 +27,33 @@ if(!parsedDataWithSuccess.success){
     password: hashedPassword,
     firstName,
     lastName
-})}
+})
+  res.json({
+    msg:"Signup Succeeded"
+  })
+}
 catch(e){
     res.status(403).json({
-        msg:"Wrong Cridentials"
+        msg:"Wrong Credentials"
     })
 }
 });
 userRouter.post("/login",async(req,res)=>{
     const {email,password}=req.body;
-    const hashed_Password =await bcrypt.hash(password,5);
-    const user = userModel.find({
-        email:email,
-        hashed_Password:password
+    const user = await userModel.findOne({
+        email:email
     })
-    if (user){
+    if (user && await bcrypt.compare(password, user.password)){
         const token =jwt.sign({
-            id:user._id,
-            JWT_KEY_USER
+            id:user._id
+        }, JWT_KEY_USER)
+        res.json({
+            token:token
         })
     }
     else{
         res.status(403).json({
-            msg:"Incorrect Cridentials"
+            msg:"Incorrect Credentials"
         })
     }
 

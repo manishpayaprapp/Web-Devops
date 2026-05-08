@@ -1,24 +1,23 @@
 const mongoose=require("mongoose");
-mongoose.connect("mongodb+srv://manishpayaprapp02_db_user:50DoElmPElDeFCHc@cluster0.sz9hwut.mongodb.net/Course-Selling")
 const Schema =mongoose.Schema;
 const ObjectId =mongoose.Types.ObjectId;
 const userSchema =new Schema({
-emial:{type:String,unique:true},
+email:{type:String,unique:true},
 password:String,
-fisrtName:String,
+firstName:String,
 lastName:String
 });
 const courseSchema =new Schema({
 title:String,
-discription:String,
+description:String,
 price:Number,
 img_URL:String,
 creatorId :ObjectId
 });
 const adminSchema =new Schema({
-emial:{type:String,unique:true},
+email:{type:String,unique:true},
 password:String,
-fisrtName:String,
+firstName:String,
 lastName:String
 });
 const purchaseSchema =new Schema({
