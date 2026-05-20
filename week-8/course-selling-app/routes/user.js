@@ -2,8 +2,8 @@ const {Router}=require("express");
 const userRouter =Router();
 const {z}= require("zod");
 const jwt =require("jsonwebtoken");
+const {JWT_USER_PASSWORD}=require("../config");
 const bcrypt = require("bcrypt");
-const JWT_KEY_USER ="123";
 const {userModel}=require("../db");
 userRouter.post("/signup",async(req,res)=>{
 const{email,password,firstName,lastName}=req.body;
@@ -38,7 +38,7 @@ catch(e){
     })
 }
 });
-userRouter.post("/login",async(req,res)=>{
+userRouter.post("/signin",async(req,res)=>{
     const {email,password}=req.body;
     const user = await userModel.findOne({
         email:email
@@ -46,7 +46,7 @@ userRouter.post("/login",async(req,res)=>{
     if (user && await bcrypt.compare(password, user.password)){
         const token =jwt.sign({
             id:user._id
-        }, JWT_KEY_USER)
+        }, JWT_USER_PASSWORD)
         res.json({
             token:token
         })

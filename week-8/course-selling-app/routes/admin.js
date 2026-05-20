@@ -1,11 +1,27 @@
 const {Router}= require("express");
 const adminRouter = Router();
-const {userModel, adminModel}=require("../db");
+const {userModel, adminModel, courseModel}=require("../db");
 const jwt =require("jsonwebtoken");
-const JWT_ADMIN="234";
+const {JWT_ADMIN_PASSWORD}=require("../config");
+const {z} = require("zod");
+const { adminMiddleware } = require("../middleware/admin");
 adminRouter.post("/signup",async(req,res)=>{
 const {email,password,firstName,lastName}=req.body;
-
+const requireBody =z.object({
+    email:z.string().min(3).max(50),
+    password:z.string().min(3).max(50),
+    firstName:z.string().min(3).max(50),
+    lastName:z.string().min(3).max(50)
+})
+const parsedDataWithSuccess = requireBody.safeParse(req.body);
+if(!parsedDataWithSuccess.success){
+    res.json({
+      msg:"Incorrect Format",
+      error:parsedDataWithSuccess.error
+    })
+    return
+}
+try{
 await adminModel.create({
     email:email,
     password:password,
@@ -15,6 +31,12 @@ await adminModel.create({
 res.json({
     msg:"Signup Succeeded"
 })
+}
+catch(e){
+    res.status(403).json({
+        msg:"Admin already exists"
+    })
+}
 });
 adminRouter.post("/signin",async(req,res)=>{
 const {email,password}=req.body;
@@ -25,7 +47,7 @@ const admin =await adminModel.findOne({
 if (admin){
     const token =jwt.sign({
         id:admin._id
-    },JWT_ADMIN)
+    },JWT_ADMIN_PASSWORD)
     res.json({
         token:token
     })
@@ -36,8 +58,16 @@ else{
     })
 }
 });
-adminRouter.post("/course",(req,res)=>{
-
+adminRouter.post("/course",adminMiddleware,async(req,res)=>{
+const adminId =req.adminId;
+const {title,description,price,img_URL,creatorId}=req.body;
+const course = await courseModel.create({
+    title,description,price,img_URL,creatorId:adminId
+})
+res.json({
+    message:"Course Created",
+    courseId:course._id
+})
 });
 adminRouter.put("/course",(req,res)=>{
 
