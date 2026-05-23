@@ -22,20 +22,33 @@ if(!parsedDataWithSuccess.success){
     return
 }
 try{
-await adminModel.create({
-    email:email,
-    password:password,
-    firstName:firstName,
-    lastName:lastName
-})
-res.json({
-    msg:"Signup Succeeded"
-})
+  const existingAdmin = await adminModel.findOne({ email });
+  if (existingAdmin) {
+    return res.status(403).json({
+      msg: "Admin already exists"
+    });
+  }
+
+  await adminModel.create({
+    email: email,
+    password: password,
+    firstName: firstName,
+    lastName: lastName
+  });
+  res.json({
+    msg: "Signup Succeeded"
+  });
 }
-catch(e){
-    res.status(403).json({
-        msg:"Admin already exists"
-    })
+catch (e) {
+  if (e.code === 11000) {
+    return res.status(403).json({
+      msg: "Admin already exists"
+    });
+  }
+  res.status(500).json({
+    msg: "Signup failed",
+    error: e.message
+  });
 }
 });
 adminRouter.post("/signin",async(req,res)=>{
@@ -84,9 +97,9 @@ res.json({
     courseId:course._id
 })
 });
-adminRouter.get("/course/bulk",(req,res)=>{
+adminRouter.get("/course/bulk",async(req,res)=>{
 const adminId =req.adminId;
-const courses = await courseModel.findOne({
+const courses = await courseModel.find({
     creatorId:adminId
 })
 res.json({
