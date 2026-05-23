@@ -4,7 +4,15 @@ const {z}= require("zod");
 const jwt =require("jsonwebtoken");
 const {JWT_USER_PASSWORD}=require("../config");
 const bcrypt = require("bcrypt");
-const {userModel}=require("../db");
+const {userModel, courseModel}=require("../db");
+const {purchaseModel}=require("../db");
+const{userMiddleware}=require("../middleware/user");
+userRouter.get("/peview",async(req,res)=>{
+    courses=await courseModel.find({})
+    res.json({
+        courses
+    })
+});
 userRouter.post("/signup",async(req,res)=>{
 const{email,password,firstName,lastName}=req.body;
 const requireBody =z.object({
@@ -58,9 +66,28 @@ userRouter.post("/signin",async(req,res)=>{
     }
 
 });
-userRouter.get("/purchases",(req,res)=>{
-
+userRouter.post("/purchase",userMiddleware,async(req,res)=>{
+    const userId=req.userId;
+    const courseId=req.body.courseId;
+    await purchaseModel.create({
+        userId:userId,
+        courseId:courseId
+    })
+    res.json({
+        msg:"You successfully brought the course"
+    })
 });
+userRouter.get("/purchases",userMiddleware,async(req,res)=>{
+    const userId=req.userId;
+    const purchases =await purchaseModel.find({
+        userId:userId
+    })
+    res.json({
+        purchases
+    })
+});
+
+
 module.exports={
     userRouter:userRouter
 }
