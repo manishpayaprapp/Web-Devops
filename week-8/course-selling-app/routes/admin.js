@@ -69,12 +69,29 @@ res.json({
     courseId:course._id
 })
 });
-adminRouter.put("/course",(req,res)=>{
-
+adminRouter.put("/course",adminMiddleware,async(req,res)=>{
+const adminId =req.adminId;
+const {title,description,price,img_URL,courseId}=req.body;
+const course = await courseModel.updateOne({
+    _id:courseId,
+    creatorId:adminId
+},
+    {
+    title,description,price,img_URL
+})
+res.json({
+    message:"Course Updated",
+    courseId:course._id
+})
 });
 adminRouter.get("/course/bulk",(req,res)=>{
+const adminId =req.adminId;
+const courses = await courseModel.findOne({
+    creatorId:adminId
+})
 res.json({
-    msg:"Hello from the course/bulk"
+    message:"This are all ur courses",
+    courses
 })
 });
 module.exports={
