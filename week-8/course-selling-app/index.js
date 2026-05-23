@@ -24,9 +24,7 @@ app.use("/admin", adminRouter);
 
 async function main() {
   try {
-    await mongoose.connect(
-      "mongodb+srv://manishpayaprapp01_db_user:123@cluster0.btfgafc.mongodb.net/course_selling_app"
-    );
+    await mongoose.connect();
     console.log("MongoDB connected");
 
     app.listen(PORT, () => {
