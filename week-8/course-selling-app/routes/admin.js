@@ -22,7 +22,7 @@ if(!parsedDataWithSuccess.success){
     return
 }
 try{
-  const existingAdmin = await adminModel.findOne({ email });
+  const existingAdmin = await adminModel.findOne({ email: email.toLowerCase().trim() });
   if (existingAdmin) {
     return res.status(403).json({
       msg: "Admin already exists"
@@ -30,8 +30,8 @@ try{
   }
 
   await adminModel.create({
-    email: email,
-    password: password,
+    email: email.toLowerCase().trim(),
+    password: password.trim(),
     firstName: firstName,
     lastName: lastName
   });
@@ -54,8 +54,8 @@ catch (e) {
 adminRouter.post("/signin",async(req,res)=>{
 const {email,password}=req.body;
 const admin =await adminModel.findOne({
-    email:email,
-    password:password
+    email: email.toLowerCase().trim(),
+    password: password.trim()
 })
 if (admin){
     const token =jwt.sign({
