@@ -17,7 +17,7 @@ const ObjectId = mongoose.ObjectId;
 const User = new Schema({
     email: { type: String, unique: true }, // Make email unique to avoid duplicate entries
     password: String,
-    name: String,
+    name: String,   
 });
 
 // Define the Todo schema with fields for title, done, and userId

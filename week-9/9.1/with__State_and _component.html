@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <div id="buttonParent">
+        </div>
+        <script>
+            let state ={
+                count:0,
+                colour:"red"
+            }
+            function onButtonPress(){
+                state.count=state.count +1;
+                state.colour="red";
+                buttonComponentReRender()
+            }
+            function buttonComponentReRender(){
+                document.getElementById("buttonParent").innerHTML= "";
+                const component = buttonComponent(state.count,state.colour);                
+                document.getElementById("buttonParent").appendChild(component);
+            }
+
+            function buttonComponent(count,colour){
+                const button =document.createElement("button");
+                button.innerHTML=`Counter ${count}`;
+                button.setAttribute("onclick",`onButtonPress()`);
+                button.setAttribute("style",`color: `+colour)
+                return button;
+            }
+
+            buttonComponentReRender();
+        </script>
+    </body>
+</html>
