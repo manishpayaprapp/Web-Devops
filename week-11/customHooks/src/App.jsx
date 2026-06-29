@@ -47,7 +47,7 @@ import { useFetch} from "./hooks/useFetch"
 import { useState } from "react"
 function App(){
 const [currentPost, setCurrentPost] = useState(1);
-const {finalData, Loading} = useFetch("https://jsonplaceholder.typicode.com/todos/"+currentPost)
+const {finalData, Loading} = useFetch("https://jsonplaceholder.typicode.com/todos/"+currentPost, 10)
 if(Loading){
 return (
 <>

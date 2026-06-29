@@ -1,6 +1,6 @@
 import {useState, useEffect} from "react"
 import { useAsyncError } from "react-router-dom";
-export function useFetch(url){
+export function useFetch(url, retryTime){
     const [finalData, setFinalData] = useState({})
     const [Loading, setLoading] = useState(true)
   async function getDetails(){
@@ -14,5 +14,8 @@ export function useFetch(url){
   useEffect(() => {
     getDetails();
   }, [url]);
+  useEffect(()=>{
+    setInterval(getDetails, retryTime * 1000)
+  },[])
 return {finalData, Loading};
 } 
