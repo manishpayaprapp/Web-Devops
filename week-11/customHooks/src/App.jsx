@@ -1,5 +1,6 @@
 // Intro
 
+
 // import { useState } from 'react'
 // import './App.css'
 
@@ -69,24 +70,53 @@
 
 // export default App
 
-import { useState } from "react";
-import { usePrev } from "./hooks/usePrev";
-function App(){
-  const [count, setCount] = useState(0);
-  const prev = usePrev(count)
-return (
-  <>
-  {count}
-  <br/> 
-  <button onClick={() =>{
-    setCount(count + 1)
-  }}>increase Count</button>
-  <button onClick={() =>{
-    setCount(count - 1)
-  }}>increase Count</button>
-  <br/>
-  previous vue of count is {prev}
-  </>
-)
+// import { useState } from "react";
+// import { usePrev } from "./hooks/usePrev";
+// function App(){
+//   const [count, setCount] = useState(0);
+//   const prev = usePrev(count)
+// return (
+//   <>
+//   {count}
+//   <br/> 
+//   <button onClick={() =>{
+//     setCount(count + 1)
+//   }}>increase Count</button>
+//   <button onClick={() =>{
+//     setCount(count - 1)
+//   }}>increase Count</button>
+//   <br/>
+//   previous vue of count is {prev}
+//   </>
+// )
+// }
+// export default App
+
+
+import { useDebounce } from "./hooks/useDebounce";
+import { useState, useEffect } from 'react';
+
+function App() {
+  const [inputValue, setInputValue] = useState("");
+  const delay = 2000;
+  const debounceValue = useDebounce(inputValue,delay);
+
+  function change(e){
+    setInputValue(e.target.value);
+  }
+
+  useEffect(()=>{
+    console.log("Expensive Operation Done")
+  },[debounceValue])
+  return (
+    <>
+      <input
+        type="text"
+        onChange={change}
+        placeholder="Type the product name"
+      />
+    </>
+  );
 }
-export default App
+
+export default App;
