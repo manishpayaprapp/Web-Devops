@@ -1,56 +1,39 @@
-import {
-  RecoilRoot,
-  useRecoilValue,
-  useSetRecoilState
-} from 'recoil'
-import {memo} from 'react'
-import { atomCounter } from './store/atom/counter'
+import { useState, memo } from "react";
+import { RecoilRoot, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { atomCounter, evenSelector } from "./store/atom/counter";
 
-function App() {
-  console.log('App rendered')
+function App(){
 
-  return (
-    <RecoilRoot>
-       <h2>
-        <CurrentCount />
-      </h2>
-
-      <Increase />
-      <Decrease />
-    </RecoilRoot>
-  )
+return <>
+<RecoilRoot>
+  <h2>
+<Counter/>
+  </h2>
+<Button/>
+<h1>
+<IsEven/>
+</h1> 
+</RecoilRoot>
+</>
+}
+function Button (){
+  const setCount = useSetRecoilState(atomCounter);
+  return<>
+  <button onClick={()=>setCount(c => c+2)}>Increase</button>
+  <button onClick={()=>setCount(c => c-1)}>Decrease</button>
+  </>
+}
+function Counter(){
+  const count = useRecoilValue(atomCounter);
+  return<>
+  {count}
+  </>
+}
+function IsEven(){
+  const even  = useRecoilValue(evenSelector);
+  return <>
+  {even ? "Even" : "Odd"}
+  </>
 }
 
-const  CurrentCount = memo( () => {
-  console.log('CurrentCount rendered')
-
-  const count = useRecoilValue(atomCounter)
-
-  return <>{count}</>
-})
-
-const  Increase = memo(() => {
-  console.log('Increase rendered')
-
-  const setCount = useSetRecoilState(atomCounter)
-
-  return (
-    <button onClick={() => setCount(c => c + 1)}>
-      Increase
-    </button>
-  )
-})
-
-const Decrease = memo(() => {
-  console.log('Decrease rendered')
-
-  const setCount = useSetRecoilState(atomCounter)
-
-  return (
-    <button onClick={() => setCount(c => c - 1)}>
-      Decrease
-    </button>
-  )
-})
-
-export default App
+export default App;
