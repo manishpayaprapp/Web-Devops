@@ -46,6 +46,25 @@
 //     console.log()
 // }
 
+// ** Class Impliments the interface
+interface people{
+    name : string;
+    age : number;
+    // greet : () => string,
+}
+
+class Manager implements people{
+    name : string;
+    age : number;
+
+    constructor(name : string , age : number ){
+        this.name = name;
+        this.age = age;
+    }
+}
+
+let user1 = new Manager("Manish", 21);
+console.log(user1.name);
 
 // * Types
 
@@ -59,20 +78,20 @@
 
 // Intersection
 
-type Employe ={
-    name : string,
-    startDate : Date
-}
+// type Employe ={
+//     name : string,
+//     startDate : Date
+// }
 
-type Manager = {
-    name : string,
-    department : string
-}
+// type Manager = {
+//     name : string,
+//     department : string
+// }
 
-type teamLead = Employe & Manager
+// type teamLead = Employe & Manager
 
-const devLead : teamLead ={
-    name : "Manish",
-    startDate : new Date(),
-    department : "Development"
-}
+// const devLead : teamLead ={
+//     name : "Manish",
+//     startDate : new Date(),
+//     department : "Development"
+// }
