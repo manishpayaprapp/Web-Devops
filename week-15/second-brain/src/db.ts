@@ -1,7 +1,8 @@
 
 import mongoose, {model, Schema} from "mongoose";
+import { DBUrl } from "./config.js";
 
-mongoose.connect("mongodb://localhost:27017/brainly")
+mongoose.connect(DBUrl);
 
 const UserSchema = new Schema({
     username: {type: String, unique: true},
