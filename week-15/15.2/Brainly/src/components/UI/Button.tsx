@@ -17,7 +17,7 @@ const sizeStyles = {
 
 const variantStyles = {
     primary: "bg-purple-600 text-white",
-    secondary: "bg-purple-400 text-purple-600",
+    secondary: "bg-purple-500 text-purple-600",
 };
 
 export function Button(props: ButtonInterface) {
