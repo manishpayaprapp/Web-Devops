@@ -7,41 +7,41 @@ function App() {
 
   return (
     <>
-      <Button 
+      <Button
         variant={"primary"}
-        startIcon={<PlusIcon size={"lg"} />} 
-        endIcon={<ShareIcon size={"lg"} />} 
-        size="lg" 
+        startIcon={<PlusIcon size={"lg"} />}
+        endIcon={<ShareIcon size={"lg"} />}
+        size="lg"
         title={"Share"}
       ></Button>
 
-<Button 
+      <Button
         variant={"secondary"}
-        startIcon={<PlusIcon size={"lg"} />} 
-        endIcon={<ShareIcon size={"lg"} />} 
-        size="lg" 
-        title={"Share"}
+        startIcon={<PlusIcon size={"lg"} />}
+        endIcon={<ShareIcon size={"lg"} />}
+        size="lg"
+        title={"Share1"}
       ></Button>
-<br/>
+      <br />
 
-<Button 
+      <Button
         variant={"primary"}
-        startIcon={<PlusIcon />} 
-        endIcon={<ShareIcon />} 
-        size="sm" 
-        title={"Share"}
+        startIcon={<PlusIcon />}
+        endIcon={<ShareIcon />}
+        size="sm"
+        title={"Share2"}
       ></Button>
 
 
-<Button 
+      <Button
         variant={"primary"}
-        startIcon={<PlusIcon size={"md"} />} 
-        endIcon={<ShareIcon size={"md"} />} 
-        size="md" 
-        title={"Share"}
+        startIcon={<PlusIcon size={"md"} />}
+        endIcon={<ShareIcon size={"md"} />}
+        size="md"
+        title={"Share3"}
       ></Button>
     </>
-  ) 
+  )
 }
 
 export default App
