@@ -16,7 +16,14 @@ export async function apiRequest<T>(
 
   if (authenticated) {
     const token = localStorage.getItem("token");
-    if (token) headers.set("Authorization", `Bearer ${token}`);
+    if (!token || token === "undefined" || token === "null" || !token.trim()) {
+      localStorage.removeItem("token");
+      if (typeof window !== "undefined" && window.location.pathname !== "/signin") {
+        window.location.replace("/signin");
+      }
+      throw new Error("You are not logged in. Redirecting to sign in...");
+    }
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   let response: Response;
@@ -28,6 +35,12 @@ export async function apiRequest<T>(
 
   const payload: unknown = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      if (typeof window !== "undefined" && window.location.pathname !== "/signin") {
+        window.location.replace("/signin");
+      }
+    }
     const message = (payload as ApiError).message;
     throw new Error(message ?? `Request failed (${response.status}).`);
   }

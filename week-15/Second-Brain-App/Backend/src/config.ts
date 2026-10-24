@@ -20,4 +20,4 @@ export const JWT_PASSWORD = jwtSecret;
 export const DB_URL = mongoUri;
 export const BCRYPT_ROUNDS = bcryptRounds;
 export const PORT = Number(process.env.PORT ?? 3000);
-export const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:5173";
+export const FRONTEND_URL = process.env.FRONTEND_URL ?? "https://b2.manishsp.tech,http://localhost:5173";

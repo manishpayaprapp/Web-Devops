@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { apiRequest } from "../api";
 import { Button } from "./UI/Button";
 import { Input } from "./UI/Input";
+import { CrossIcon } from "../icons/CrossIcon";
 
 interface CreateContentModalProps {
   open: boolean;
@@ -50,7 +51,9 @@ export function CreateContentModal({ open, onClose, onCreated }: CreateContentMo
             <p className="eyebrow">SAVE FOR LATER</p>
             <h2 id="modal-title">Add to your brain</h2>
           </div>
-          <button className="icon-button close-button" aria-label="Close" onClick={onClose}>×</button>
+          <button className="icon-button close-button" aria-label="Close" onClick={onClose}>
+            <CrossIcon size="md" />
+          </button>
         </div>
         <form onSubmit={addContent}>
           <Input label="Title" name="title" placeholder="Give it a memorable name" required maxLength={120} />

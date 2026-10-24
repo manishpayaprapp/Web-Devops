@@ -13,7 +13,36 @@ const db_1 = require("./db");
 const middleware_1 = require("./middleware");
 const utils_1 = require("./utils");
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)({ origin: config_1.FRONTEND_URL }));
+const envOrigins = config_1.FRONTEND_URL
+    ? config_1.FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
+    : [];
+const defaultOrigins = [
+    "https://b2.manishsp.tech",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+    ...envOrigins,
+];
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin)
+            return callback(null, true);
+        const normalized = origin.replace(/\/$/, "");
+        if (defaultOrigins.includes("*") ||
+            defaultOrigins.includes(normalized) ||
+            /^https:\/\/([a-z0-9-]+\.)*manishsp\.tech$/.test(normalized) ||
+            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalized)) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+};
+app.use((0, cors_1.default)(corsOptions));
+app.options("*", (0, cors_1.default)(corsOptions));
 app.use(express_1.default.json({ limit: "32kb" }));
 const asyncHandler = (handler) => (req, res, next) => {
     void handler(req, res, next).catch(next);

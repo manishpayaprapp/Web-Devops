@@ -22,7 +22,14 @@ export function Dashboard() {
   const handleLoadError = useCallback((requestError: unknown) => {
     const message = requestError instanceof Error ? requestError.message : "Could not load your content.";
     setError(message);
-    if (message.toLowerCase().includes("logged in") || message.toLowerCase().includes("session") || message.toLowerCase().includes("token")) {
+    const lowerMessage = message.toLowerCase();
+    if (
+      lowerMessage.includes("logged in") ||
+      lowerMessage.includes("session") ||
+      lowerMessage.includes("token") ||
+      lowerMessage.includes("unauthorized") ||
+      lowerMessage.includes("401")
+    ) {
       localStorage.removeItem("token");
       navigate("/signin", { replace: true });
     }
@@ -42,6 +49,13 @@ export function Dashboard() {
   }, [handleLoadError]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || token === "undefined" || token === "null" || !token.trim()) {
+      localStorage.removeItem("token");
+      navigate("/signin", { replace: true });
+      return;
+    }
+
     let active = true;
     apiRequest<ContentResponse>("/api/v1/content")
       .then((result) => {
@@ -54,7 +68,7 @@ export function Dashboard() {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [handleLoadError]);
+  }, [handleLoadError, navigate]);
 
   const visibleContents = useMemo(
     () => filter === "all" ? contents : contents.filter((content) => content.type === filter),

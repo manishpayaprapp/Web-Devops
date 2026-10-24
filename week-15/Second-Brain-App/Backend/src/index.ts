@@ -9,7 +9,41 @@ import { userMiddleware } from "./middleware";
 import { random } from "./utils";
 
 const app = express();
-app.use(cors({ origin: FRONTEND_URL }));
+
+const envOrigins = FRONTEND_URL
+  ? FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
+  : [];
+
+const defaultOrigins = [
+  "https://b2.manishsp.tech",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+  ...envOrigins,
+];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const normalized = origin.replace(/\/$/, "");
+    if (
+      defaultOrigins.includes("*") ||
+      defaultOrigins.includes(normalized) ||
+      /^https:\/\/([a-z0-9-]+\.)*manishsp\.tech$/.test(normalized) ||
+      /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalized)
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "32kb" }));
 
 type AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
@@ -182,3 +216,5 @@ void startServer().catch((error: unknown) => {
   console.error("Backend startup failed:", error);
   process.exitCode = 1;
 });
+
+

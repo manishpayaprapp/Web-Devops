@@ -18,4 +18,4 @@ exports.JWT_PASSWORD = jwtSecret;
 exports.DB_URL = mongoUri;
 exports.BCRYPT_ROUNDS = bcryptRounds;
 exports.PORT = Number(process.env.PORT ?? 3000);
-exports.FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:5173";
+exports.FRONTEND_URL = process.env.FRONTEND_URL ?? "https://b2.manishsp.tech,http://localhost:5173";
