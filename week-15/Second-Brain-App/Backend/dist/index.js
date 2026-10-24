@@ -16,26 +16,28 @@ const app = (0, express_1.default)();
 const envOrigins = config_1.FRONTEND_URL
     ? config_1.FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
     : [];
-const defaultOrigins = [
+const allowedOrigins = new Set([
     "https://b2.manishsp.tech",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
     ...envOrigins,
-];
+]);
 const corsOptions = {
     origin: (origin, callback) => {
+        // Allow non-browser requests (mobile apps, server-to-server, curl)
         if (!origin)
             return callback(null, true);
         const normalized = origin.replace(/\/$/, "");
-        if (defaultOrigins.includes("*") ||
-            defaultOrigins.includes(normalized) ||
+        // Allow exact matches in whitelist, subdomains of manishsp.tech, and local dev
+        const isAllowed = allowedOrigins.has(normalized) ||
             /^https:\/\/([a-z0-9-]+\.)*manishsp\.tech$/.test(normalized) ||
-            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalized)) {
+            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalized);
+        if (isAllowed) {
             return callback(null, true);
         }
-        return callback(null, true);
+        return callback(new Error(`Origin ${origin} is not allowed by CORS.`));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -172,6 +174,10 @@ app.use((_req, res) => {
     res.status(404).json({ message: "Endpoint not found." });
 });
 const errorHandler = (error, _req, res, _next) => {
+    if (error instanceof Error && error.message.includes("CORS")) {
+        res.status(403).json({ message: "Access forbidden by CORS policy." });
+        return;
+    }
     console.error("API request failed:", error);
     if (res.headersSent)
         return;
