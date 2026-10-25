@@ -1,5 +1,6 @@
 import express, { type ErrorRequestHandler, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -9,6 +10,24 @@ import { userMiddleware } from "./middleware";
 import { random } from "./utils";
 
 const app = express();
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
+
+app.use((_req, res, next) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  next();
+});
 
 const envOrigins = FRONTEND_URL
   ? FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
@@ -76,6 +95,21 @@ const contentSchema = z.object({
     return protocol === "http:" || protocol === "https:";
   }, "Link must use HTTP or HTTPS."),
   type: z.enum(["youtube", "twitter"]),
+});
+
+const SECURITY_TXT = `Contact: mailto:Manish.payaprapp.01@gmail.com
+Expires: 2027-10-25T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://api.b2.manishsp.tech/.well-known/security.txt
+Policy: https://b2.manishsp.tech/
+`;
+
+app.get(["/.well-known/security.txt", "/security.txt"], (_req, res) => {
+  res.type("text/plain").send(SECURITY_TXT);
+});
+
+app.get("/robots.txt", (_req, res) => {
+  res.type("text/plain").send("User-agent: *\nDisallow: /\n");
 });
 
 app.get("/api/v1/health", (_req, res) => {

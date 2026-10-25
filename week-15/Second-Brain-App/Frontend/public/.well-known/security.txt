@@ -1,0 +1,5 @@
+Contact: mailto:Manish.payaprapp.01@gmail.com
+Expires: 2027-10-25T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://b2.manishsp.tech/.well-known/security.txt
+Policy: https://b2.manishsp.tech/

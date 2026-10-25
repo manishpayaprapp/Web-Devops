@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const zod_1 = require("zod");
@@ -13,6 +14,20 @@ const db_1 = require("./db");
 const middleware_1 = require("./middleware");
 const utils_1 = require("./utils");
 const app = (0, express_1.default)();
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+    },
+}));
+app.use((_req, res, next) => {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    next();
+});
 const envOrigins = config_1.FRONTEND_URL
     ? config_1.FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
     : [];
@@ -67,6 +82,18 @@ const contentSchema = zod_1.z.object({
         return protocol === "http:" || protocol === "https:";
     }, "Link must use HTTP or HTTPS."),
     type: zod_1.z.enum(["youtube", "twitter"]),
+});
+const SECURITY_TXT = `Contact: mailto:Manish.payaprapp.01@gmail.com
+Expires: 2027-10-25T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://api.b2.manishsp.tech/.well-known/security.txt
+Policy: https://b2.manishsp.tech/
+`;
+app.get(["/.well-known/security.txt", "/security.txt"], (_req, res) => {
+    res.type("text/plain").send(SECURITY_TXT);
+});
+app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain").send("User-agent: *\nDisallow: /\n");
 });
 app.get("/api/v1/health", (_req, res) => {
     res.json({ status: "ok", database: "connected" });
