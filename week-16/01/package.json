@@ -1,0 +1,15 @@
+{
+  "name": "week-16",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx index.tsx"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2",
+    "tsx": "^4.23.15"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}
