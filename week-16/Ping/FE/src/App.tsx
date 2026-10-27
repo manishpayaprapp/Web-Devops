@@ -2,39 +2,74 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 function App() {
-  const [socket, setSocket] = useState<WebSocket | null>(null)
+  const [messages, setMessages] = useState(["hi there", "hello"])
+  const wsRef = useRef<WebSocket | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  function sendMessage() {
-    if (!socket || !inputRef.current) {
-      return
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:8080")
+    wsRef.current = ws
+
+    ws.onmessage = (event) => {
+      setMessages(m => [...m, event.data])
     }
 
-    const message = inputRef.current.value
-    socket.send(message)
-  }
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        type: "join",
+        payload: {
+          roomId: "red"
+        }
+      }))
+    }
 
-  useEffect(() => {
-  const ws = new WebSocket('ws://localhost:8080')
-
-  ws.onopen = () => {
-    setSocket(ws)
-  }
-
-  ws.onmessage = (ev) => {
-    alert(ev.data)
-  }
-
-  return () => {
-    ws.close()
-  }
-}, [])
+    return () => {
+      ws.close()
+    }
+  }, [])
 
   return (
-    <>
-      <input ref={inputRef} type="text" placeholder="Message" />
-      <button onClick={sendMessage}>Send</button>
-    </>
+    <div className='h-screen bg-black'>
+      <div className='h-[85vh] overflow-y-auto'>
+        {messages.map((message, index) => (
+          <div key={index} className='m-8'>
+            <span className='bg-white text-black rounded p-4'>
+              {message}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className='w-full bg-white flex'>
+        <input
+          ref={inputRef}
+          id="message"
+          className="flex-1 p-4"
+        />
+
+        <button
+          onClick={() => {
+            const message = inputRef.current?.value
+
+            if (!message?.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+              return
+            }
+
+            wsRef.current.send(JSON.stringify({
+              type: "chat",
+              payload: {
+                message: message
+              }
+            }))
+
+            inputRef.current.value = ""
+          }}
+          className='bg-purple-600 text-white p-4'
+        >
+          Send message
+        </button>
+      </div>
+    </div>
   )
 }
 
