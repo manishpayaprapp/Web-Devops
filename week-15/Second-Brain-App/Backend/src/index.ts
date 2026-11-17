@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { BCRYPT_ROUNDS, FRONTEND_URL, JWT_PASSWORD, PORT } from "./config";
-import { connectDatabase, ContentModel, LinkModel, UserModel } from "./db";
+import { connectDatabase, ContentModel, FolderModel, LinkModel, UserModel } from "./db";
 import { userMiddleware } from "./middleware";
 import { random } from "./utils";
 
@@ -94,7 +94,21 @@ const contentSchema = z.object({
     const protocol = new URL(value).protocol;
     return protocol === "http:" || protocol === "https:";
   }, "Link must use HTTP or HTTPS."),
-  type: z.enum(["youtube", "twitter"]),
+  type: z.enum(["youtube", "twitter", "notion", "roadmap"]),
+  folderId: z.string().regex(/^[a-f\d]{24}$/i).optional().nullable(),
+});
+
+const folderCreateSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+});
+
+const folderDeleteSchema = z.object({
+  folderId: z.string().regex(/^[a-f\d]{24}$/i),
+});
+
+const contentMoveSchema = z.object({
+  contentId: z.string().regex(/^[a-f\d]{24}$/i),
+  folderId: z.string().regex(/^[a-f\d]{24}$/i).nullable(),
 });
 
 const SECURITY_TXT = `Contact: mailto:Manish.payaprapp.01@gmail.com
@@ -162,6 +176,7 @@ app.post("/api/v1/content", userMiddleware, asyncHandler(async (req, res) => {
 
   const content = await ContentModel.create({
     ...parsed.data,
+    folderId: parsed.data.folderId ?? null,
     userId: req.userId,
   });
   res.status(201).json({ message: "Content added.", content });
@@ -170,7 +185,7 @@ app.post("/api/v1/content", userMiddleware, asyncHandler(async (req, res) => {
 app.get("/api/v1/content", userMiddleware, asyncHandler(async (req, res) => {
   const content = await ContentModel.find({ userId: req.userId })
     .sort({ createdAt: -1 })
-    .select("title link type createdAt");
+    .select("title link type folderId createdAt");
   res.json({ content });
 }));
 
@@ -221,7 +236,7 @@ app.get("/api/v1/brain/:shareLink", asyncHandler(async (req, res) => {
 
   const [user, content] = await Promise.all([
     UserModel.findById(link.userId).select("username"),
-    ContentModel.find({ userId: link.userId }).sort({ createdAt: -1 }).select("title link type createdAt"),
+    ContentModel.find({ userId: link.userId }).sort({ createdAt: -1 }).select("title link type folderId createdAt"),
   ]);
   if (!user) {
     res.status(404).json({ message: "This shared collection is no longer available." });
@@ -229,6 +244,76 @@ app.get("/api/v1/brain/:shareLink", asyncHandler(async (req, res) => {
   }
   res.json({ username: user.username, content });
 }));
+
+// --- Folder routes ---
+
+app.post(["/api/v1/folder", "/api/v1/folders"], userMiddleware, asyncHandler(async (req, res) => {
+  const parsed = folderCreateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.issues[0]?.message ?? "Invalid folder details." });
+    return;
+  }
+
+  const folder = await FolderModel.create({
+    name: parsed.data.name,
+    userId: req.userId,
+  });
+  res.status(201).json({ message: "Folder created.", folder });
+}));
+
+app.get(["/api/v1/folder", "/api/v1/folders"], userMiddleware, asyncHandler(async (req, res) => {
+  const folders = await FolderModel.find({ userId: req.userId }).sort({ createdAt: -1 });
+  res.json({ folders });
+}));
+
+app.delete(["/api/v1/folder", "/api/v1/folders", "/api/v1/folders/:folderId"], userMiddleware, asyncHandler(async (req, res) => {
+  const folderId = req.params.folderId || req.body?.folderId;
+  const parsed = folderDeleteSchema.safeParse({ folderId });
+  if (!parsed.success) {
+    res.status(400).json({ message: "A valid folder ID is required." });
+    return;
+  }
+
+  const result = await FolderModel.deleteOne({ _id: parsed.data.folderId, userId: req.userId });
+  if (result.deletedCount === 0) {
+    res.status(404).json({ message: "Folder not found." });
+    return;
+  }
+
+  await ContentModel.updateMany({ folderId: parsed.data.folderId, userId: req.userId }, { $set: { folderId: null } });
+  res.json({ message: "Folder deleted." });
+}));
+
+// --- Move content to/from folder ---
+
+app.put("/api/v1/content/move", userMiddleware, asyncHandler(async (req, res) => {
+  const parsed = contentMoveSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.issues[0]?.message ?? "Invalid move details." });
+    return;
+  }
+
+  if (parsed.data.folderId !== null) {
+    const folder = await FolderModel.findOne({ _id: parsed.data.folderId, userId: req.userId });
+    if (!folder) {
+      res.status(404).json({ message: "Folder not found." });
+      return;
+    }
+  }
+
+  const result = await ContentModel.updateOne(
+    { _id: parsed.data.contentId, userId: req.userId },
+    { $set: { folderId: parsed.data.folderId } },
+  );
+  if (result.matchedCount === 0) {
+    res.status(404).json({ message: "Content not found." });
+    return;
+  }
+
+  res.json({ message: "Content moved." });
+}));
+
+// --- 404 & error handling ---
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Endpoint not found." });
@@ -259,5 +344,3 @@ void startServer().catch((error: unknown) => {
   console.error("Backend startup failed:", error);
   process.exitCode = 1;
 });
-
-

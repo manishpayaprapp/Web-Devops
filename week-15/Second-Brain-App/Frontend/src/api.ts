@@ -48,11 +48,14 @@ export async function apiRequest<T>(
   return payload as T;
 }
 
+export type ContentType = "youtube" | "twitter" | "notion" | "roadmap";
+
 export interface BrainContent {
   _id: string;
   title: string;
   link: string;
-  type: "youtube" | "twitter";
+  type: ContentType;
+  folderId?: string | null;
 }
 
 export interface ContentResponse {
@@ -62,4 +65,13 @@ export interface ContentResponse {
 export interface SharedBrainResponse {
   username: string;
   content: BrainContent[];
+}
+
+export interface BrainFolder {
+  _id: string;
+  name: string;
+}
+
+export interface FoldersResponse {
+  folders: BrainFolder[];
 }

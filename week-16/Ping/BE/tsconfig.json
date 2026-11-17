@@ -41,5 +41,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["../index.tsx"]
+  "include": ["./index.tsx"]
 }

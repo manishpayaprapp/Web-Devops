@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiRequest, type BrainContent, type ContentResponse } from "../api";
+import { apiRequest, type BrainContent, type BrainFolder, type ContentResponse, type FoldersResponse } from "../api";
 import { CreateContentModal } from "../components/CreateModel";
 import { Button } from "../components/UI/Button";
 import { Card } from "../components/UI/Card";
@@ -8,7 +8,7 @@ import { Sidebar } from "../components/UI/Sidebar";
 import { PlusIcon } from "../icons/PlusIcon";
 import { ShareIcon } from "../icons/ShareIcon";
 
-type Filter = "all" | "youtube" | "twitter";
+type Filter = "all" | "youtube" | "twitter" | "notion" | "roadmap";
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -18,6 +18,8 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [folders, setFolders] = useState<BrainFolder[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   const handleLoadError = useCallback((requestError: unknown) => {
     const message = requestError instanceof Error ? requestError.message : "Could not load your content.";
@@ -48,6 +50,15 @@ export function Dashboard() {
     }
   }, [handleLoadError]);
 
+  const fetchFolders = useCallback(async () => {
+    try {
+      const result = await apiRequest<FoldersResponse>("/api/v1/folders");
+      setFolders(result.folders);
+    } catch {
+      // Folders are optional; silently ignore errors
+    }
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token || token === "undefined" || token === "null" || !token.trim()) {
@@ -67,13 +78,21 @@ export function Dashboard() {
       .finally(() => {
         if (active) setLoading(false);
       });
-    return () => { active = false; };
-  }, [handleLoadError, navigate]);
 
-  const visibleContents = useMemo(
-    () => filter === "all" ? contents : contents.filter((content) => content.type === filter),
-    [contents, filter],
-  );
+    fetchFolders();
+
+    return () => { active = false; };
+  }, [handleLoadError, navigate, fetchFolders]);
+
+  const visibleContents = useMemo(() => {
+    let filtered = contents;
+    if (selectedFolder) {
+      filtered = filtered.filter((content) => content.folderId === selectedFolder);
+    } else if (filter !== "all") {
+      filtered = filtered.filter((content) => content.type === filter);
+    }
+    return filtered;
+  }, [contents, filter, selectedFolder]);
 
   async function shareBrain() {
     setError("");
@@ -108,19 +127,83 @@ export function Dashboard() {
     }
   }
 
+  async function createFolder() {
+    const name = prompt("Folder name:");
+    if (!name || !name.trim()) return;
+    setError("");
+    try {
+      await apiRequest("/api/v1/folders", {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      await fetchFolders();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Could not create folder.");
+    }
+  }
+
+  async function deleteFolder(folderId: string) {
+    if (!window.confirm("Are you sure you want to delete this folder? Saved items will be kept in your brain.")) {
+      return;
+    }
+    setError("");
+    try {
+      await apiRequest(`/api/v1/folders/${folderId}`, {
+        method: "DELETE",
+      });
+      if (selectedFolder === folderId) {
+        setSelectedFolder(null);
+      }
+      await fetchFolders();
+      await refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Could not delete folder.");
+    }
+  }
+
   function signOut() {
     localStorage.removeItem("token");
     navigate("/signin", { replace: true });
   }
 
+  function getHeadingText(): string {
+    if (selectedFolder) {
+      const folder = folders.find((f) => f._id === selectedFolder);
+      return folder ? folder.name : "Folder";
+    }
+    switch (filter) {
+      case "youtube": return "YouTube videos";
+      case "twitter": return "Saved posts";
+      case "notion": return "Notion pages";
+      case "roadmap": return "Roadmap.sh links";
+      default: return "Your collection";
+    }
+  }
+
+  const folderNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const folder of folders) {
+      map[folder._id] = folder.name;
+    }
+    return map;
+  }, [folders]);
+
   return (
     <div className="app-shell">
-      <Sidebar selected={filter} onSelect={setFilter} />
+      <Sidebar
+        selected={filter}
+        onSelect={setFilter}
+        folders={folders}
+        selectedFolder={selectedFolder}
+        onSelectFolder={setSelectedFolder}
+        onCreateFolder={createFolder}
+        onDeleteFolder={(id) => void deleteFolder(id)}
+      />
       <main className="dashboard">
         <header className="dashboard-header">
           <div>
             <p className="eyebrow">YOUR SECOND BRAIN</p>
-            <h1>{filter === "all" ? "Your collection" : filter === "youtube" ? "YouTube videos" : "Saved posts"}</h1>
+            <h1>{getHeadingText()}</h1>
             <p className="muted">A calm place to keep the things worth coming back to.</p>
           </div>
           <div className="header-actions">
@@ -152,7 +235,12 @@ export function Dashboard() {
           ) : (
             <div className="content-grid">
               {visibleContents.map((content) => (
-                <Card key={content._id} {...content} onDelete={() => void deleteContent(content._id)} />
+                <Card
+                  key={content._id}
+                  {...content}
+                  folderName={content.folderId ? folderNameMap[content.folderId] : undefined}
+                  onDelete={() => void deleteContent(content._id)}
+                />
               ))}
             </div>
           )}
@@ -165,7 +253,9 @@ export function Dashboard() {
         onCreated={() => {
           setModalOpen(false);
           void refresh();
+          void fetchFolders();
         }}
+        folders={folders}
       />
     </div>
   );

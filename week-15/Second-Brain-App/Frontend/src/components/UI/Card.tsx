@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
 import { ShareIcon } from "../../icons/ShareIcon";
 import { TrashIcon } from "../../icons/TrashIcon";
+import { NotionIcon } from "../../icons/NotionIcon";
+import { RoadmapIcon } from "../../icons/RoadmapIcon";
+import type { ContentType } from "../../api";
 
 interface CardProps {
   title: string;
   link: string;
-  type: "twitter" | "youtube";
+  type: ContentType;
+  folderName?: string;
   onDelete?: () => void;
 }
 
@@ -73,7 +77,14 @@ function getYouTubeEmbedUrl(link: string): string | null {
   }
 }
 
-export function Card({ title, link, type, onDelete }: CardProps) {
+const typeMarkText: Record<ContentType, string> = {
+  youtube: "YT",
+  twitter: "X",
+  notion: "N",
+  roadmap: "RM",
+};
+
+export function Card({ title, link, type, folderName, onDelete }: CardProps) {
   const tweetContainer = useRef<HTMLDivElement>(null);
   const tweetUrl = type === "twitter" ? getTweetUrl(link) : null;
   const youtubeEmbedUrl = type === "youtube" ? getYouTubeEmbedUrl(link) : null;
@@ -96,8 +107,9 @@ export function Card({ title, link, type, onDelete }: CardProps) {
     <article className="content-card">
       <header className="content-card-header">
         <div className="content-card-heading">
-          <span className={`content-type-mark ${type}`}>{type === "youtube" ? "YT" : "X"}</span>
+          <span className={`content-type-mark ${type}`}>{typeMarkText[type]}</span>
           <h2 title={title}>{title}</h2>
+          {folderName && <span className="folder-badge">{folderName}</span>}
         </div>
         <div className="card-actions">
           <a className="icon-button" href={link} target="_blank" rel="noreferrer" aria-label="Open saved link">
@@ -128,6 +140,28 @@ export function Card({ title, link, type, onDelete }: CardProps) {
             {tweetUrl
               ? <blockquote className="twitter-tweet"><a href={tweetUrl}>View post on X</a></blockquote>
               : <p className="preview-unavailable">Post preview unavailable. <a href={link} target="_blank" rel="noreferrer">Open post</a></p>}
+          </div>
+        )}
+        {type === "notion" && (
+          <div className="notion-preview link-preview">
+            <div className="link-preview-icon">
+              <NotionIcon />
+            </div>
+            <div className="link-preview-body">
+              <p className="link-preview-label">Notion Document</p>
+              <a className="link-preview-action" href={link} target="_blank" rel="noreferrer">Open in Notion &rarr;</a>
+            </div>
+          </div>
+        )}
+        {type === "roadmap" && (
+          <div className="roadmap-preview link-preview">
+            <div className="link-preview-icon">
+              <RoadmapIcon />
+            </div>
+            <div className="link-preview-body">
+              <p className="link-preview-label">Developer Roadmap</p>
+              <a className="link-preview-action" href={link} target="_blank" rel="noreferrer">View on roadmap.sh &rarr;</a>
+            </div>
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import mongoose, { Schema, model } from "mongoose";
 import { DB_URL } from "./config";
 
-export type ContentType = "youtube" | "twitter";
+export type ContentType = "youtube" | "twitter" | "notion" | "roadmap";
 
 interface User {
   username: string;
@@ -13,11 +13,17 @@ interface Content {
   link: string;
   type: ContentType;
   userId: mongoose.Types.ObjectId;
+  folderId?: mongoose.Types.ObjectId;
   createdAt: Date;
 }
 
 interface SharedLink {
   hash: string;
+  userId: mongoose.Types.ObjectId;
+}
+
+interface Folder {
+  name: string;
   userId: mongoose.Types.ObjectId;
 }
 
@@ -29,8 +35,9 @@ const userSchema = new Schema<User>({
 const contentSchema = new Schema<Content>({
   title: { type: String, required: true, trim: true, maxlength: 120 },
   link: { type: String, required: true, trim: true },
-  type: { type: String, enum: ["youtube", "twitter"], required: true },
+  type: { type: String, enum: ["youtube", "twitter", "notion", "roadmap"], required: true },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  folderId: { type: Schema.Types.ObjectId, ref: "Folder", default: null },
 }, { timestamps: true });
 
 const sharedLinkSchema = new Schema<SharedLink>({
@@ -38,9 +45,15 @@ const sharedLinkSchema = new Schema<SharedLink>({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
 }, { timestamps: true });
 
+const folderSchema = new Schema<Folder>({
+  name: { type: String, required: true, trim: true, maxlength: 60 },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+}, { timestamps: true });
+
 export const UserModel = model<User>("User", userSchema);
 export const ContentModel = model<Content>("Content", contentSchema);
 export const LinkModel = model<SharedLink>("Links", sharedLinkSchema);
+export const FolderModel = model<Folder>("Folder", folderSchema);
 
 export async function connectDatabase(): Promise<void> {
   await mongoose.connect(DB_URL);

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LinkModel = exports.ContentModel = exports.UserModel = void 0;
+exports.FolderModel = exports.LinkModel = exports.ContentModel = exports.UserModel = void 0;
 exports.connectDatabase = connectDatabase;
 const mongoose_1 = __importStar(require("mongoose"));
 const config_1 = require("./config");
@@ -44,16 +44,22 @@ const userSchema = new mongoose_1.Schema({
 const contentSchema = new mongoose_1.Schema({
     title: { type: String, required: true, trim: true, maxlength: 120 },
     link: { type: String, required: true, trim: true },
-    type: { type: String, enum: ["youtube", "twitter"], required: true },
+    type: { type: String, enum: ["youtube", "twitter", "notion", "roadmap"], required: true },
     userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    folderId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Folder", default: null },
 }, { timestamps: true });
 const sharedLinkSchema = new mongoose_1.Schema({
     hash: { type: String, required: true, unique: true, index: true },
     userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
 }, { timestamps: true });
+const folderSchema = new mongoose_1.Schema({
+    name: { type: String, required: true, trim: true, maxlength: 60 },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+}, { timestamps: true });
 exports.UserModel = (0, mongoose_1.model)("User", userSchema);
 exports.ContentModel = (0, mongoose_1.model)("Content", contentSchema);
 exports.LinkModel = (0, mongoose_1.model)("Links", sharedLinkSchema);
+exports.FolderModel = (0, mongoose_1.model)("Folder", folderSchema);
 async function connectDatabase() {
     await mongoose_1.default.connect(config_1.DB_URL);
 }

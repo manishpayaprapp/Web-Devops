@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { apiRequest } from "../api";
+import { apiRequest, type BrainFolder, type ContentType } from "../api";
 import { Button } from "./UI/Button";
 import { Input } from "./UI/Input";
 import { CrossIcon } from "../icons/CrossIcon";
@@ -8,10 +8,12 @@ interface CreateContentModalProps {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  folders: BrainFolder[];
 }
 
-export function CreateContentModal({ open, onClose, onCreated }: CreateContentModalProps) {
-  const [type, setType] = useState<"youtube" | "twitter">("youtube");
+export function CreateContentModal({ open, onClose, onCreated, folders }: CreateContentModalProps) {
+  const [type, setType] = useState<ContentType>("youtube");
+  const [folderId, setFolderId] = useState<string>("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,9 +32,11 @@ export function CreateContentModal({ open, onClose, onCreated }: CreateContentMo
           title: form.get("title"),
           link: form.get("link"),
           type,
+          folderId: folderId || null,
         }),
       });
       setType("youtube");
+      setFolderId("");
       onCreated();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Could not save this item.");
@@ -62,7 +66,20 @@ export function CreateContentModal({ open, onClose, onCreated }: CreateContentMo
             <legend>Content type</legend>
             <button type="button" className={`type-option ${type === "youtube" ? "active" : ""}`} onClick={() => setType("youtube")}>YouTube video</button>
             <button type="button" className={`type-option ${type === "twitter" ? "active" : ""}`} onClick={() => setType("twitter")}>X / Twitter post</button>
+            <button type="button" className={`type-option ${type === "notion" ? "active" : ""}`} onClick={() => setType("notion")}>Notion page</button>
+            <button type="button" className={`type-option ${type === "roadmap" ? "active" : ""}`} onClick={() => setType("roadmap")}>Roadmap.sh</button>
           </fieldset>
+          {folders.length > 0 && (
+            <label className="field">
+              <span className="field-label">Folder (optional)</span>
+              <select className="text-input folder-select" value={folderId} onChange={(e) => setFolderId(e.target.value)}>
+                <option value="">No folder</option>
+                {folders.map((f) => (
+                  <option key={f._id} value={f._id}>{f.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="modal-actions">
             <Button variant="quiet" text="Cancel" onClick={onClose} />
